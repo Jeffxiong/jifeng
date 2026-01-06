@@ -1,0 +1,9 @@
+请手动执行以下命令初始化数据库：
+
+mysql -u root -p123456 < database/init.sql
+
+如果密码不是123456，请使用正确的密码执行：
+mysql -u root -p < database/init.sql
+
+或者直接在MySQL客户端中执行 database/init.sql 文件的内容。
+

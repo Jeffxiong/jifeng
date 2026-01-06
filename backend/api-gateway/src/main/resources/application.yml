@@ -1,0 +1,102 @@
+server:
+  port: ${API_GATEWAY_PORT:8080}
+
+spring:
+  application:
+    name: api-gateway
+  
+  # 激活的配置文件
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:dev}
+  
+  cloud:
+    gateway:
+      routes:
+        # 认证服务路由
+        - id: auth-service
+          uri: http://${AUTH_SERVICE_HOST:localhost}:${AUTH_SERVICE_PORT:8081}
+          predicates:
+            - Path=/api/auth/**
+          filters:
+            - StripPrefix=0
+        
+        # 积分服务路由
+        - id: points-service
+          uri: http://${POINTS_SERVICE_HOST:localhost}:${POINTS_SERVICE_PORT:8082}
+          predicates:
+            - Path=/api/points/**
+          filters:
+            - StripPrefix=0
+        
+        # 产品服务路由
+        - id: product-service
+          uri: http://${PRODUCT_SERVICE_HOST:localhost}:${PRODUCT_SERVICE_PORT:8083}
+          predicates:
+            - Path=/api/products/**
+          filters:
+            - StripPrefix=0
+      
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            # 生产环境必须配置具体的前端域名
+            allowedOrigins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173,http://localhost:5174}
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders:
+              - Authorization
+              - Content-Type
+              - Accept
+              - Origin
+              - X-Requested-With
+            exposedHeaders:
+              - Authorization
+            allowCredentials: true
+            maxAge: 3600
+
+logging:
+  level:
+    org.springframework.cloud.gateway: ${LOG_LEVEL:INFO}
+
+---
+# 开发环境配置
+spring:
+  config:
+    activate:
+      on-profile: dev
+  cloud:
+    gateway:
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOrigins:
+              - "http://localhost:5173"
+              - "http://localhost:5174"
+              - "http://127.0.0.1:5173"
+              - "http://127.0.0.1:5174"
+
+logging:
+  level:
+    org.springframework.cloud.gateway: DEBUG
+
+---
+# 生产环境配置
+spring:
+  config:
+    activate:
+      on-profile: prod
+  cloud:
+    gateway:
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            # 生产环境必须配置具体的域名，不允许使用通配符
+            allowedOrigins: ${CORS_ALLOWED_ORIGINS}
+
+logging:
+  level:
+    org.springframework.cloud.gateway: WARN
